@@ -1,4 +1,5 @@
 import { Panel } from "@/components/panels/Panel"
+import { FullscreenPanel } from "@/components/panels/FullscreenPanel"
 
 interface NeutralGearProps {
   error?: Error | null
@@ -39,13 +40,13 @@ export function NeutralGear({ error }: NeutralGearProps) {
         <div className="h-6 bg-muted/30 rounded animate-pulse" />
       </Panel>
 
-      {/* Status Area */}
-      <Panel className="shrink-0 py-2 px-4">
+      {/* Status Area - expandable to fullscreen */}
+      <FullscreenPanel className="shrink-0 py-2 px-4">
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <span>Initializing...</span>
           <span className="text-xs">Please wait</span>
         </div>
-      </Panel>
+      </FullscreenPanel>
     </div>
   )
 }

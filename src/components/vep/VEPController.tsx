@@ -1,3 +1,4 @@
+import { useState } from "react"
 import type { PhaseConfiguration } from "@/config/supabase"
 import { NeutralGear } from "./NeutralGear"
 import { GearOne } from "./GearOne"
@@ -12,21 +13,37 @@ interface VEPControllerProps {
 }
 
 export function VEPController({ config, loading, error }: VEPControllerProps) {
+  // UI-driven gear override (e.g., when mic is clicked)
+  const [gearOverride, setGearOverride] = useState<number | null>(null)
+
   // Show neutral gear during loading or if there's an error
   if (loading || error || !config) {
     return <NeutralGear error={error} />
   }
 
-  // Render appropriate gear based on configuration
-  switch (config.initial_gear) {
+  // Use override if set, otherwise use config
+  const activeGear = gearOverride ?? config.initial_gear
+
+  // Handler to switch to voice mode (Gear 4)
+  const handleSwitchToVoice = () => {
+    setGearOverride(4)
+  }
+
+  // Handler to return from voice mode to previous gear
+  const handleSwitchToText = () => {
+    setGearOverride(null)
+  }
+
+  // Render appropriate gear based on active gear
+  switch (activeGear) {
     case 1:
-      return <GearOne config={config} />
+      return <GearOne config={config} onSwitchToVoice={handleSwitchToVoice} />
     case 2:
-      return <GearTwo config={config} />
+      return <GearTwo config={config} onSwitchToVoice={handleSwitchToVoice} />
     case 3:
-      return <GearThree config={config} />
+      return <GearThree config={config} onSwitchToVoice={handleSwitchToVoice} />
     case 4:
-      return <GearFour config={config} />
+      return <GearFour config={config} onSwitchToText={handleSwitchToText} />
     default:
       return <NeutralGear />
   }

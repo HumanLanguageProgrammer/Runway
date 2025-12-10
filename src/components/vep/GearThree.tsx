@@ -1,15 +1,16 @@
 import { useState } from "react"
 import { Panel } from "@/components/panels/Panel"
 import { FullscreenPanel } from "@/components/panels/FullscreenPanel"
-import { Input } from "@/components/ui/input"
+import { AutoTextarea } from "@/components/ui/auto-textarea"
 import { Mic, ArrowUp, ChevronRight } from "lucide-react"
 import type { PhaseConfiguration } from "@/config/supabase"
 
 interface GearThreeProps {
   config: PhaseConfiguration
+  onSwitchToVoice?: () => void
 }
 
-export function GearThree({ config: _config }: GearThreeProps) {
+export function GearThree({ config: _config, onSwitchToVoice }: GearThreeProps) {
   const [isFullScreen, setIsFullScreen] = useState(false)
 
   const toggleFullScreen = () => {
@@ -55,27 +56,30 @@ export function GearThree({ config: _config }: GearThreeProps) {
         )}
       </div>
 
-      {/* Text Input Panel */}
-      <Panel className="shrink-0 py-2 px-3">
-        <div className="flex items-center gap-2">
-          <Input
+      {/* Text Input Panel - with activation effect */}
+      <Panel className="shrink-0 py-2 px-3" interactive>
+        <div className="flex items-end gap-2">
+          <AutoTextarea
             placeholder="Type your message..."
-            className="flex-1 border-0 shadow-none focus-visible:ring-0 px-0"
+            className="flex-1 border-0 shadow-none focus-visible:ring-0 px-0 py-2"
           />
-          <button className="p-2 rounded-full text-muted-foreground hover:text-primary hover:bg-muted transition-colors">
+          <button
+            onClick={onSwitchToVoice}
+            className="p-2 rounded-full text-muted-foreground hover:text-primary hover:bg-muted transition-colors shrink-0"
+          >
             <Mic className="h-5 w-5" />
           </button>
-          <button className="p-2 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
+          <button className="p-2 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shrink-0">
             <ArrowUp className="h-5 w-5" />
           </button>
-          <button className="p-2 rounded-full text-muted-foreground hover:text-primary hover:bg-muted transition-colors">
+          <button className="p-2 rounded-full text-muted-foreground hover:text-primary hover:bg-muted transition-colors shrink-0">
             <ChevronRight className="h-5 w-5" />
           </button>
         </div>
       </Panel>
 
-      {/* Status Bar */}
-      <Panel className="shrink-0 py-2 px-4">
+      {/* Status Bar - expandable to fullscreen */}
+      <FullscreenPanel className="shrink-0 py-2 px-4">
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <div className="flex items-center gap-4">
             <span>Librarian: <span className="text-foreground">Sage</span></span>
@@ -89,7 +93,7 @@ export function GearThree({ config: _config }: GearThreeProps) {
             <span className="text-xs">80%</span>
           </div>
         </div>
-      </Panel>
+      </FullscreenPanel>
     </div>
   )
 }

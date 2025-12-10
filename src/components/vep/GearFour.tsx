@@ -24,8 +24,8 @@ export function GearFour({ config: _config, onSwitchToText }: GearFourProps) {
         </div>
       </FullscreenPanel>
 
-      {/* Voice Input Panel */}
-      <Panel className="shrink-0 py-3 px-4">
+      {/* Voice Input Panel - with activation effect */}
+      <Panel className="shrink-0 py-3 px-4" interactive>
         <div className="flex items-center justify-center relative">
           {/* Return to Text - Absolute positioned left */}
           <button
@@ -48,8 +48,8 @@ export function GearFour({ config: _config, onSwitchToText }: GearFourProps) {
         </div>
       </Panel>
 
-      {/* Status Bar - More prominent in voice mode */}
-      <Panel className="shrink-0 py-2 px-4">
+      {/* Status Bar - expandable to fullscreen */}
+      <FullscreenPanel className="shrink-0 py-2 px-4">
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <div className="flex items-center gap-4">
             <span>Librarian: <span className="text-foreground">Sage</span></span>
@@ -64,7 +64,7 @@ export function GearFour({ config: _config, onSwitchToText }: GearFourProps) {
             <span className="text-xs">80%</span>
           </div>
         </div>
-      </Panel>
+      </FullscreenPanel>
     </div>
   )
 }

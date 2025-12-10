@@ -5,9 +5,10 @@ import type { PhaseConfiguration } from "@/config/supabase"
 
 interface GearOneProps {
   config: PhaseConfiguration
+  onSwitchToVoice?: () => void
 }
 
-export function GearOne({ config: _config }: GearOneProps) {
+export function GearOne({ config: _config, onSwitchToVoice: _onSwitchToVoice }: GearOneProps) {
   const [isFullScreen, setIsFullScreen] = useState(false)
 
   const toggleFullScreen = () => {
@@ -63,8 +64,8 @@ export function GearOne({ config: _config }: GearOneProps) {
         ))}
       </div>
 
-      {/* Status Bar */}
-      <Panel className="shrink-0 py-2 px-4">
+      {/* Status Bar - expandable to fullscreen */}
+      <FullscreenPanel className="shrink-0 py-2 px-4">
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <div className="flex items-center gap-4">
             <span>Librarian: <span className="text-foreground">Sage</span></span>
@@ -78,7 +79,7 @@ export function GearOne({ config: _config }: GearOneProps) {
             <span className="text-xs">80%</span>
           </div>
         </div>
-      </Panel>
+      </FullscreenPanel>
     </div>
   )
 }
