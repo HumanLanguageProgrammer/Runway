@@ -4,7 +4,13 @@ import { TOOLS, type ContentBlock, type ToolUseBlock } from '@/lib/tools'
 
 type Message = {
   role: 'user' | 'assistant'
-  content: string | ContentBlock[]
+  content: string | ContentBlock[] | ToolResultContent[]
+}
+
+type ToolResultContent = {
+  type: 'tool_result'
+  tool_use_id: string
+  content: string
 }
 
 type UseConversationReturn = {
@@ -77,14 +83,32 @@ export function useConversation(
         setResponseContent(input.message)
       }
 
-      // Append user message and assistant response to history
-      // Store full content array for assistant messages
+      // Build the assistant message with full content array
       const assistantMessage: Message = {
         role: 'assistant',
         content: data.content
       }
 
-      setConversationHistory(prev => [...prev, newUserMessage, assistantMessage])
+      // Build tool_result messages for each tool_use
+      // The API requires a tool_result for each tool_use before the next user message
+      const toolResultContent: ToolResultContent[] = toolUseBlocks.map(toolUse => ({
+        type: 'tool_result' as const,
+        tool_use_id: toolUse.id,
+        content: 'Displayed to visitor'
+      }))
+
+      const toolResultMessage: Message = {
+        role: 'user',
+        content: toolResultContent
+      }
+
+      // Update history: user message -> assistant response -> tool results
+      setConversationHistory(prev => [
+        ...prev,
+        newUserMessage,
+        assistantMessage,
+        ...(toolUseBlocks.length > 0 ? [toolResultMessage] : [])
+      ])
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to send message'
       setError(new Error(errorMessage))
