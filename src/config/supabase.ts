@@ -18,6 +18,26 @@ export type PhaseConfiguration = {
   phase: string
   initial_gear: number
   default_agent: string | null
+  default_model: string | null
   created_at: string
   updated_at: string
+}
+
+export type AgentAssembly = {
+  id: string
+  agent: string
+  model: string | null
+  identity_card: string | null
+  window_grammar: string | null
+  agentic_os: string | null
+  mixing_desk: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type ResolvedAgentAssembly = {
+  identity_card: string | null
+  window_grammar: string | null
+  agentic_os: string | null
+  mixing_desk: string | null
 }

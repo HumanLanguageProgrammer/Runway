@@ -2,19 +2,37 @@ import { useState } from "react"
 import { Panel } from "@/components/panels/Panel"
 import { FullscreenPanel } from "@/components/panels/FullscreenPanel"
 import { AutoTextarea } from "@/components/ui/auto-textarea"
-import { Mic, ArrowUp, ChevronRight } from "lucide-react"
+import { Mic, ArrowUp, ChevronRight, Loader2 } from "lucide-react"
 import type { PhaseConfiguration } from "@/config/supabase"
 
 interface GearTwoProps {
   config: PhaseConfiguration
   onSwitchToVoice?: () => void
+  sendMessage?: (message: string) => Promise<void>
+  responseContent?: string
+  isLoading?: boolean
 }
 
-export function GearTwo({ config: _config, onSwitchToVoice }: GearTwoProps) {
+export function GearTwo({ config: _config, onSwitchToVoice, sendMessage, responseContent, isLoading }: GearTwoProps) {
   const [isFullScreen, setIsFullScreen] = useState(false)
+  const [inputValue, setInputValue] = useState("")
 
   const toggleFullScreen = () => {
     setIsFullScreen(prev => !prev)
+  }
+
+  const handleSend = async () => {
+    if (!inputValue.trim() || !sendMessage || isLoading) return
+    const message = inputValue
+    setInputValue("")
+    await sendMessage(message)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      handleSend()
+    }
   }
 
   return (
@@ -43,9 +61,16 @@ export function GearTwo({ config: _config, onSwitchToVoice }: GearTwoProps) {
           interactive
         >
           <div className="flex-1 overflow-auto">
-            <p className="text-foreground leading-relaxed">
-              Welcome to the Learning Lab. I'm here to guide your journey through cognitive systems and AI. Feel free to ask anything or type your question below.
-            </p>
+            {isLoading ? (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Thinking...</span>
+              </div>
+            ) : (
+              <p className="text-foreground leading-relaxed whitespace-pre-wrap">
+                {responseContent || "Welcome to the Learning Lab. I'm here to guide your journey through cognitive systems and AI. Feel free to ask anything or type your question below."}
+              </p>
+            )}
           </div>
         </Panel>
       </div>
@@ -56,6 +81,10 @@ export function GearTwo({ config: _config, onSwitchToVoice }: GearTwoProps) {
           <AutoTextarea
             placeholder="Type your message..."
             className="flex-1 border-0 shadow-none focus-visible:ring-0 px-0 py-2"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={handleKeyDown}
+            disabled={isLoading}
           />
           <button
             onClick={onSwitchToVoice}
@@ -63,8 +92,12 @@ export function GearTwo({ config: _config, onSwitchToVoice }: GearTwoProps) {
           >
             <Mic className="h-5 w-5" />
           </button>
-          <button className="p-2 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shrink-0">
-            <ArrowUp className="h-5 w-5" />
+          <button
+            onClick={handleSend}
+            disabled={isLoading || !inputValue.trim()}
+            className="p-2 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <ArrowUp className="h-5 w-5" />}
           </button>
           <button className="p-2 rounded-full text-muted-foreground hover:text-primary hover:bg-muted transition-colors shrink-0">
             <ChevronRight className="h-5 w-5" />

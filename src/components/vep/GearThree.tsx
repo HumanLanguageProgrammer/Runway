@@ -2,19 +2,37 @@ import { useState } from "react"
 import { Panel } from "@/components/panels/Panel"
 import { FullscreenPanel } from "@/components/panels/FullscreenPanel"
 import { AutoTextarea } from "@/components/ui/auto-textarea"
-import { Mic, ArrowUp, ChevronRight } from "lucide-react"
+import { Mic, ArrowUp, ChevronRight, Loader2 } from "lucide-react"
 import type { PhaseConfiguration } from "@/config/supabase"
 
 interface GearThreeProps {
   config: PhaseConfiguration
   onSwitchToVoice?: () => void
+  sendMessage?: (message: string) => Promise<void>
+  responseContent?: string
+  isLoading?: boolean
 }
 
-export function GearThree({ config: _config, onSwitchToVoice }: GearThreeProps) {
+export function GearThree({ config: _config, onSwitchToVoice, sendMessage, responseContent, isLoading }: GearThreeProps) {
   const [isFullScreen, setIsFullScreen] = useState(false)
+  const [inputValue, setInputValue] = useState("")
 
   const toggleFullScreen = () => {
     setIsFullScreen(prev => !prev)
+  }
+
+  const handleSend = async () => {
+    if (!inputValue.trim() || !sendMessage || isLoading) return
+    const message = inputValue
+    setInputValue("")
+    await sendMessage(message)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      handleSend()
+    }
   }
 
   return (
@@ -29,15 +47,28 @@ export function GearThree({ config: _config, onSwitchToVoice }: GearThreeProps) 
           interactive
         >
           <div className="flex-1 overflow-auto">
-            <p className="text-foreground leading-relaxed mb-4">
-              Welcome to the Learning Lab's Deep Dive mode. This configuration prioritizes extended text engagement, allowing for more detailed explanations and deeper dialogue.
-            </p>
-            <p className="text-foreground leading-relaxed mb-4">
-              The text area takes priority in this layout, providing more space for comprehensive responses while the image serves as a smaller visual reference.
-            </p>
-            <p className="text-foreground leading-relaxed">
-              Feel free to explore complex topics here. This mode is designed for sustained, in-depth learning conversations.
-            </p>
+            {isLoading ? (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Thinking...</span>
+              </div>
+            ) : responseContent ? (
+              <p className="text-foreground leading-relaxed whitespace-pre-wrap">
+                {responseContent}
+              </p>
+            ) : (
+              <>
+                <p className="text-foreground leading-relaxed mb-4">
+                  Welcome to the Learning Lab's Deep Dive mode. This configuration prioritizes extended text engagement, allowing for more detailed explanations and deeper dialogue.
+                </p>
+                <p className="text-foreground leading-relaxed mb-4">
+                  The text area takes priority in this layout, providing more space for comprehensive responses while the image serves as a smaller visual reference.
+                </p>
+                <p className="text-foreground leading-relaxed">
+                  Feel free to explore complex topics here. This mode is designed for sustained, in-depth learning conversations.
+                </p>
+              </>
+            )}
           </div>
         </Panel>
 
@@ -62,6 +93,10 @@ export function GearThree({ config: _config, onSwitchToVoice }: GearThreeProps) 
           <AutoTextarea
             placeholder="Type your message..."
             className="flex-1 border-0 shadow-none focus-visible:ring-0 px-0 py-2"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={handleKeyDown}
+            disabled={isLoading}
           />
           <button
             onClick={onSwitchToVoice}
@@ -69,8 +104,12 @@ export function GearThree({ config: _config, onSwitchToVoice }: GearThreeProps) 
           >
             <Mic className="h-5 w-5" />
           </button>
-          <button className="p-2 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shrink-0">
-            <ArrowUp className="h-5 w-5" />
+          <button
+            onClick={handleSend}
+            disabled={isLoading || !inputValue.trim()}
+            className="p-2 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <ArrowUp className="h-5 w-5" />}
           </button>
           <button className="p-2 rounded-full text-muted-foreground hover:text-primary hover:bg-muted transition-colors shrink-0">
             <ChevronRight className="h-5 w-5" />
