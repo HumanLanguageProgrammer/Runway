@@ -1,5 +1,7 @@
 import { useState } from "react"
 import type { PhaseConfiguration } from "@/config/supabase"
+import { useAgent } from "@/hooks/useAgent"
+import { useConversation } from "@/hooks/useConversation"
 import { NeutralGear } from "./NeutralGear"
 import { GearOne } from "./GearOne"
 import { GearTwo } from "./GearTwo"
@@ -16,9 +18,21 @@ export function VEPController({ config, loading, error }: VEPControllerProps) {
   // UI-driven gear override (e.g., when mic is clicked)
   const [gearOverride, setGearOverride] = useState<number | null>(null)
 
+  // Load agent and assemble Master Frame
+  const { masterFrame, agentLoading, agentError } = useAgent(
+    config?.default_agent ?? null,
+    config?.default_model ?? null
+  )
+
+  // Conversation state management
+  const { sendMessage, responseContent, isLoading: conversationLoading } = useConversation(
+    masterFrame,
+    config?.default_model ?? null
+  )
+
   // Show neutral gear during loading or if there's an error
-  if (loading || error || !config) {
-    return <NeutralGear error={error} />
+  if (loading || agentLoading || error || agentError || !config) {
+    return <NeutralGear error={error || agentError} />
   }
 
   // Use override if set, otherwise use config
@@ -34,14 +48,21 @@ export function VEPController({ config, loading, error }: VEPControllerProps) {
     setGearOverride(null)
   }
 
+  // Conversation props for gears with text input
+  const conversationProps = {
+    sendMessage,
+    responseContent,
+    isLoading: conversationLoading
+  }
+
   // Render appropriate gear based on active gear
   switch (activeGear) {
     case 1:
       return <GearOne config={config} onSwitchToVoice={handleSwitchToVoice} />
     case 2:
-      return <GearTwo config={config} onSwitchToVoice={handleSwitchToVoice} />
+      return <GearTwo config={config} onSwitchToVoice={handleSwitchToVoice} {...conversationProps} />
     case 3:
-      return <GearThree config={config} onSwitchToVoice={handleSwitchToVoice} />
+      return <GearThree config={config} onSwitchToVoice={handleSwitchToVoice} {...conversationProps} />
     case 4:
       return <GearFour config={config} onSwitchToText={handleSwitchToText} />
     default:
