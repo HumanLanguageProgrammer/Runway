@@ -41,3 +41,38 @@ export type ResolvedAgentAssembly = {
   agentic_os: string | null
   mixing_desk: string | null
 }
+
+// Phase 3: Knowledge System Types
+
+export type KnowledgeNode = {
+  node_key: string
+  text_content: string
+  image_url: string | null
+  image_alt: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type KnowledgeRegistryRow = {
+  id: string
+  node_key: string
+  agent: string | null
+  description: string
+  display_order: number
+  created_at: string
+}
+
+export type RegistryEntry = {
+  node_key: string
+  description: string
+  display_order: number
+  status: 'available' | 'active'
+  has_image: boolean
+}
+
+export type NodeContent = {
+  node_key: string
+  text_content: string
+  image_url: string | null
+  image_alt: string | null
+}

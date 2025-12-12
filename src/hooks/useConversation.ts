@@ -1,6 +1,8 @@
 import { useState, useCallback } from 'react'
 import { getModelString } from '@/lib/models'
 import { TOOLS, type ContentBlock, type ToolUseBlock } from '@/lib/tools'
+import { assembleKnowledgeContext, assembleFullSystemPrompt } from '@/lib/windowPanelAssembly'
+import type { RegistryEntry, NodeContent } from '@/config/supabase'
 
 type Message = {
   role: 'user' | 'assistant'
@@ -13,6 +15,12 @@ type ToolResultContent = {
   content: string
 }
 
+type ToolHandlers = {
+  onSetGear?: (gear: number) => void
+  onLoadNode?: (nodeKey: string) => Promise<{ success: boolean; error?: string; already_loaded?: boolean; has_image?: boolean }>
+  onDisplayNode?: (nodeKey: string) => { success: boolean; error?: string }
+}
+
 type UseConversationReturn = {
   sendMessage: (userMessage: string) => Promise<void>
   responseContent: string
@@ -23,7 +31,10 @@ type UseConversationReturn = {
 
 export function useConversation(
   masterFrame: string | null,
-  modelShorthand: string | null
+  modelShorthand: string | null,
+  knowledgeRegistry: RegistryEntry[] = [],
+  retrievedNodes: Map<string, NodeContent> = new Map(),
+  toolHandlers: ToolHandlers = {}
 ): UseConversationReturn {
   const [conversationHistory, setConversationHistory] = useState<Message[]>([])
   const [responseContent, setResponseContent] = useState<string>('')
@@ -43,6 +54,10 @@ export function useConversation(
     setIsLoading(true)
     setError(null)
 
+    // Assemble full system prompt with knowledge context
+    const knowledgeContext = assembleKnowledgeContext(knowledgeRegistry, retrievedNodes)
+    const fullSystemPrompt = assembleFullSystemPrompt(masterFrame, knowledgeContext)
+
     // Build messages array with history + new user message
     const newUserMessage: Message = { role: 'user', content: userMessage }
     const messages = [...conversationHistory, newUserMessage]
@@ -54,7 +69,7 @@ export function useConversation(
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          system: masterFrame,
+          system: fullSystemPrompt,
           messages: messages.map(m => ({
             role: m.role,
             content: m.content
@@ -71,16 +86,65 @@ export function useConversation(
 
       const data = await response.json()
 
-      // Extract text_response tool calls
+      // Extract tool_use blocks
       const toolUseBlocks = (data.content as ContentBlock[]).filter(
         (block): block is ToolUseBlock => block.type === 'tool_use'
       )
 
-      // Find text_response and extract message
-      const textResponse = toolUseBlocks.find(block => block.name === 'text_response')
-      if (textResponse) {
-        const input = textResponse.input as { message: string }
-        setResponseContent(input.message)
+      // Process each tool call and build results
+      const toolResults: ToolResultContent[] = []
+
+      for (const toolUse of toolUseBlocks) {
+        let resultContent = ''
+
+        switch (toolUse.name) {
+          case 'text_response': {
+            const input = toolUse.input as { message: string }
+            setResponseContent(input.message)
+            resultContent = 'Displayed to visitor'
+            break
+          }
+
+          case 'set_gear': {
+            const input = toolUse.input as { gear: number }
+            if (toolHandlers.onSetGear) {
+              toolHandlers.onSetGear(input.gear)
+            }
+            resultContent = JSON.stringify({ success: true, gear: input.gear })
+            break
+          }
+
+          case 'load_node': {
+            const input = toolUse.input as { node_key: string }
+            if (toolHandlers.onLoadNode) {
+              const result = await toolHandlers.onLoadNode(input.node_key)
+              resultContent = JSON.stringify(result)
+            } else {
+              resultContent = JSON.stringify({ success: false, error: 'load_node handler not configured' })
+            }
+            break
+          }
+
+          case 'display_node': {
+            const input = toolUse.input as { node_key: string }
+            if (toolHandlers.onDisplayNode) {
+              const result = toolHandlers.onDisplayNode(input.node_key)
+              resultContent = JSON.stringify({ ...result, node_key: input.node_key, displayed: result.success })
+            } else {
+              resultContent = JSON.stringify({ success: false, error: 'display_node handler not configured' })
+            }
+            break
+          }
+
+          default:
+            resultContent = JSON.stringify({ success: false, error: `Unknown tool: ${toolUse.name}` })
+        }
+
+        toolResults.push({
+          type: 'tool_result',
+          tool_use_id: toolUse.id,
+          content: resultContent
+        })
       }
 
       // Build the assistant message with full content array
@@ -89,17 +153,10 @@ export function useConversation(
         content: data.content
       }
 
-      // Build tool_result messages for each tool_use
-      // The API requires a tool_result for each tool_use before the next user message
-      const toolResultContent: ToolResultContent[] = toolUseBlocks.map(toolUse => ({
-        type: 'tool_result' as const,
-        tool_use_id: toolUse.id,
-        content: 'Displayed to visitor'
-      }))
-
+      // Build tool_result message
       const toolResultMessage: Message = {
         role: 'user',
-        content: toolResultContent
+        content: toolResults
       }
 
       // Update history: user message -> assistant response -> tool results
@@ -116,7 +173,7 @@ export function useConversation(
     } finally {
       setIsLoading(false)
     }
-  }, [masterFrame, modelShorthand, conversationHistory])
+  }, [masterFrame, modelShorthand, conversationHistory, knowledgeRegistry, retrievedNodes, toolHandlers])
 
   return {
     sendMessage,

@@ -11,9 +11,11 @@ interface GearTwoProps {
   sendMessage?: (message: string) => Promise<void>
   responseContent?: string
   isLoading?: boolean
+  imageUrl?: string | null
+  imageAlt?: string | null
 }
 
-export function GearTwo({ config: _config, onSwitchToVoice, sendMessage, responseContent, isLoading }: GearTwoProps) {
+export function GearTwo({ config: _config, onSwitchToVoice, sendMessage, responseContent, isLoading, imageUrl, imageAlt }: GearTwoProps) {
   const [isFullScreen, setIsFullScreen] = useState(false)
   const [inputValue, setInputValue] = useState("")
 
@@ -43,12 +45,20 @@ export function GearTwo({ config: _config, onSwitchToVoice, sendMessage, respons
         {!isFullScreen && (
           <FullscreenPanel className="flex-1 min-w-0">
             <div className="flex-1 flex items-center justify-center h-full">
-              <div className="text-center text-muted-foreground">
-                <div className="w-32 h-32 mx-auto mb-4 rounded-full bg-muted/50 flex items-center justify-center">
-                  <span className="text-4xl">🔍</span>
+              {imageUrl ? (
+                <img
+                  src={imageUrl}
+                  alt={imageAlt || 'Display image'}
+                  className="max-w-full max-h-full object-contain rounded-lg"
+                />
+              ) : (
+                <div className="text-center text-muted-foreground">
+                  <div className="w-32 h-32 mx-auto mb-4 rounded-full bg-muted/50 flex items-center justify-center">
+                    <span className="text-4xl">🔍</span>
+                  </div>
+                  <p className="text-sm">Image Display Area</p>
                 </div>
-                <p className="text-sm">Image Display Area</p>
-              </div>
+              )}
             </div>
           </FullscreenPanel>
         )}

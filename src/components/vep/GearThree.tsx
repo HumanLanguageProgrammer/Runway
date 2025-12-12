@@ -11,9 +11,11 @@ interface GearThreeProps {
   sendMessage?: (message: string) => Promise<void>
   responseContent?: string
   isLoading?: boolean
+  imageUrl?: string | null
+  imageAlt?: string | null
 }
 
-export function GearThree({ config: _config, onSwitchToVoice, sendMessage, responseContent, isLoading }: GearThreeProps) {
+export function GearThree({ config: _config, onSwitchToVoice, sendMessage, responseContent, isLoading, imageUrl, imageAlt }: GearThreeProps) {
   const [isFullScreen, setIsFullScreen] = useState(false)
   const [inputValue, setInputValue] = useState("")
 
@@ -76,12 +78,20 @@ export function GearThree({ config: _config, onSwitchToVoice, sendMessage, respo
         {!isFullScreen && (
           <FullscreenPanel className="w-56 min-w-0">
             <div className="flex-1 flex items-center justify-center h-full">
-              <div className="text-center text-muted-foreground">
-                <div className="w-20 h-20 mx-auto mb-2 rounded-full bg-muted/50 flex items-center justify-center">
-                  <span className="text-2xl">📚</span>
+              {imageUrl ? (
+                <img
+                  src={imageUrl}
+                  alt={imageAlt || 'Display image'}
+                  className="max-w-full max-h-full object-contain rounded-lg"
+                />
+              ) : (
+                <div className="text-center text-muted-foreground">
+                  <div className="w-20 h-20 mx-auto mb-2 rounded-full bg-muted/50 flex items-center justify-center">
+                    <span className="text-2xl">📚</span>
+                  </div>
+                  <p className="text-xs">Image Thumbnail</p>
                 </div>
-                <p className="text-xs">Image Thumbnail</p>
-              </div>
+              )}
             </div>
           </FullscreenPanel>
         )}

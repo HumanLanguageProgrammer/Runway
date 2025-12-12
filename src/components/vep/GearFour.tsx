@@ -6,21 +6,31 @@ import type { PhaseConfiguration } from "@/config/supabase"
 interface GearFourProps {
   config: PhaseConfiguration
   onSwitchToText?: () => void
+  imageUrl?: string | null
+  imageAlt?: string | null
 }
 
-export function GearFour({ config: _config, onSwitchToText }: GearFourProps) {
+export function GearFour({ config: _config, onSwitchToText, imageUrl, imageAlt }: GearFourProps) {
   return (
     <div className="h-full w-full bg-background p-4 flex flex-col gap-3 overflow-hidden">
       {/* Large Image Display at top - Voice mode: no text panel */}
       <FullscreenPanel className="flex-1 min-h-0">
         <div className="flex-1 flex items-center justify-center h-full">
-          <div className="text-center text-muted-foreground">
-            <div className="w-48 h-48 mx-auto mb-4 rounded-full bg-muted/50 flex items-center justify-center">
-              <span className="text-6xl">🎙️</span>
+          {imageUrl ? (
+            <img
+              src={imageUrl}
+              alt={imageAlt || 'Display image'}
+              className="max-w-full max-h-full object-contain rounded-lg"
+            />
+          ) : (
+            <div className="text-center text-muted-foreground">
+              <div className="w-48 h-48 mx-auto mb-4 rounded-full bg-muted/50 flex items-center justify-center">
+                <span className="text-6xl">🎙️</span>
+              </div>
+              <p className="text-lg font-medium">Voice Mode Active</p>
+              <p className="text-sm mt-2">Tap the microphone to begin speaking</p>
             </div>
-            <p className="text-lg font-medium">Voice Mode Active</p>
-            <p className="text-sm mt-2">Tap the microphone to begin speaking</p>
-          </div>
+          )}
         </div>
       </FullscreenPanel>
 
